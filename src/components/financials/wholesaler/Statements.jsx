@@ -39,6 +39,8 @@ const Statements = () => {
       payments: 2,
       outstanding: 125000
     }
+
+    
   ]);
 
   const [filters, setFilters] = useState({ search: "", viewed: "" });
