@@ -12,7 +12,7 @@ import { useNavigate } from "react-router-dom";
  * 1. ADMIN / COMPANY IMPORTS
  * ========================================================================= */
 import DashboardPage from "../../../pages/DashboardPage";
-// import ProductionPage from "../../../pages/ProductionPage";
+import ProductionPage from "../../../pages/ProductionPage";
 import InventoryPage from "../../../pages/InventoryPage";
 import OrdersPage from "../../../pages/OrdersPage";
 import DistributionPage from "../../../pages/DistributionPage";
