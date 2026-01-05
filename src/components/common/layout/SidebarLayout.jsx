@@ -78,13 +78,13 @@ import W_NewOrders from "../../orders/wholesaler/NewOrders";
 import W_InProcessOrders from "../../orders/wholesaler/InProcessOrders";
 import W_DeliveredOrders from "../../orders/wholesaler/DeliveredOrders";
 import W_OrderHistory from "../../orders/wholesaler/OrderHistory";
-// OrderDetailsModal is opened inside Orders pages, not directly from sidebar
-// import W_OrderDetailsModal from "../../orders/wholesaler/OrderDetailsModal";
 
 // Inventory
 import W_FinishedGoods from "../../inventory/wholesaler/FinishedGoods";
 import W_LowStockAlerts from "../../inventory/wholesaler/LowStockAlerts";
 import W_ProductAvailability from "../../inventory/wholesaler/ProductAvailability";
+// --- NEW IMPORT ADDED HERE ---
+import W_InventorySummary from "../../inventory/wholesaler/Inventory_summary"; 
 
 // Distribution
 import W_DeliveryTracking from "../../distribution/wholesaler/DeliveryTracking";
@@ -198,6 +198,8 @@ const SidebarLayout = () => {
           label: "My Stock",
           icon: Package,
           subItems: [
+            // --- NEW MENU ITEM ADDED HERE ---
+            { id: "w_inventory_summary", label: "Inventory Summary" },
             { id: "w_stock", label: "Finished Goods" },
             { id: "w_alerts", label: "Low Stock Alerts" },
             { id: "w_product_availability", label: "Product Availability" },
@@ -262,7 +264,7 @@ const SidebarLayout = () => {
     },
   ];
 
-  // B. COMPANY / ADMIN SIDEBAR (unchanged from previous version)
+  // B. COMPANY / ADMIN SIDEBAR (unchanged)
   const companyNavGroups = [
     {
       title: "Main",
@@ -500,6 +502,13 @@ const SidebarLayout = () => {
           );
 
         // inventory
+        // --- NEW CASE ADDED HERE ---
+        case "w_inventory_summary":
+          return (
+            <ComponentWrapper title="Inventory Summary">
+              <W_InventorySummary />
+            </ComponentWrapper>
+          );
         case "w_stock":
           return (
             <ComponentWrapper title="Finished Goods">

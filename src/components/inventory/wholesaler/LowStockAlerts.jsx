@@ -1,72 +1,92 @@
 import React from "react";
-import { AlertCircle, BellRing, PackageX, TrendingDown } from "lucide-react";
+import { AlertCircle, BellRing, PackageX, TrendingDown, ArrowRight, RefreshCw, Clock } from "lucide-react";
 
 const LowStockAlerts = () => {
   const alerts = [
-    { name: "1L Bottle Case", sku: "WB-1L-CS", status: "Backorder" },
-    { name: "500ml Bottle Case", sku: "WB-500-CS", status: "Low Stock" },
+    { name: "1L Bottle Case", sku: "WB-1L-CS", status: "Backorder", daysLeft: 0, requested: false },
+    { name: "500ml Bottle Case", sku: "WB-500-CS", status: "Low Stock", daysLeft: 2, requested: true },
+    { name: "20L Jar Caps", sku: "JC-20L", status: "Low Stock", daysLeft: 4, requested: false },
   ];
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 overflow-hidden animate-[fadeInUp_0.3s_ease-out]">
+    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 overflow-hidden flex flex-col h-full animate-in fade-in slide-in-from-bottom-2 duration-500">
       
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
-        <div className="p-2 bg-red-50 text-red-600 rounded-lg animate-pulse">
-           <BellRing size={20} />
+      <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+        <div className="flex items-center gap-3">
+           <div className="p-2.5 bg-rose-50 text-rose-600 rounded-xl animate-pulse shadow-sm shadow-rose-100">
+              <BellRing size={20} />
+           </div>
+           <div>
+             <h3 className="text-lg font-bold text-slate-800">Critical Stock Alerts</h3>
+             <p className="text-xs text-slate-500 font-medium">3 items require immediate attention</p>
+           </div>
         </div>
-        <div>
-          <h3 className="text-lg font-bold text-slate-800">Critical Stock Alerts</h3>
-          <p className="text-xs text-slate-500">Items requiring immediate attention.</p>
-        </div>
+        <button className="text-xs font-bold text-indigo-600 hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
+           View All <ArrowRight size={14} />
+        </button>
       </div>
 
       {/* Alert List */}
-      <ul className="space-y-3">
+      <ul className="space-y-3 flex-1 overflow-y-auto pr-1 custom-scrollbar">
         {alerts.map((item, idx) => {
-          const isBackorder = item.status === "Backorder";
+          const isCritical = item.status === "Backorder";
           
           return (
             <li
               key={item.sku}
               className={`
-                flex items-center justify-between p-4 rounded-xl border transition-all duration-300 hover:shadow-md hover:-translate-y-0.5
-                ${isBackorder 
-                  ? 'bg-red-50/60 border-red-100' 
-                  : 'bg-amber-50/60 border-amber-100'}
+                group relative flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl border transition-all duration-300 hover:shadow-md
+                ${isCritical ? 'bg-rose-50/40 border-rose-100' : 'bg-amber-50/40 border-amber-100'}
               `}
-              style={{ animationDelay: `${idx * 0.15}s` }}
             >
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-full ${isBackorder ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'}`}>
-                  {isBackorder ? <PackageX size={18} /> : <TrendingDown size={18} />}
+              <div className="flex items-center gap-3 mb-3 sm:mb-0">
+                <div className={`p-2.5 rounded-xl shadow-sm ${isCritical ? 'bg-white text-rose-600' : 'bg-white text-amber-600'}`}>
+                  {isCritical ? <PackageX size={18} /> : <TrendingDown size={18} />}
                 </div>
                 <div>
-                  <p className="font-bold text-slate-800">{item.name}</p>
-                  <p className="text-xs font-mono text-slate-500 bg-white/50 px-1.5 rounded inline-block">
-                    SKU: {item.sku}
-                  </p>
+                  <div className="flex items-center gap-2">
+                     <p className="font-bold text-slate-800 text-sm">{item.name}</p>
+                     {isCritical && <span className="flex h-2 w-2 rounded-full bg-rose-500 animate-ping"/>}
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                     <p className="text-[10px] font-mono text-slate-500 bg-white/60 px-1.5 rounded border border-slate-100/50">
+                       {item.sku}
+                     </p>
+                     <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1">
+                        <Clock size={10} /> {item.daysLeft === 0 ? "Out of Stock" : `${item.daysLeft} days coverage`}
+                     </span>
+                  </div>
                 </div>
               </div>
 
-              <span className={`
-                inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border shadow-sm
-                ${isBackorder 
-                  ? 'bg-white text-red-700 border-red-200' 
-                  : 'bg-white text-amber-700 border-amber-200'}
-              `}>
-                <AlertCircle size={14} /> 
-                {item.status}
-              </span>
+              {/* Action Area */}
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                 {item.requested ? (
+                    <span className="flex-1 sm:flex-none text-center text-[10px] font-bold bg-white text-emerald-600 px-3 py-1.5 rounded-lg border border-emerald-100 shadow-sm flex items-center justify-center gap-1">
+                       <RefreshCw size={12} className="animate-spin-slow" /> Request Sent
+                    </span>
+                 ) : (
+                    <button className={`
+                       flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-sm transition-all active:scale-95
+                       ${isCritical 
+                         ? 'bg-rose-600 text-white hover:bg-rose-700 shadow-rose-200' 
+                         : 'bg-amber-500 text-white hover:bg-amber-600 shadow-amber-200'}
+                    `}>
+                       <RefreshCw size={12} /> Restock Now
+                    </button>
+                 )}
+              </div>
             </li>
           );
         })}
       </ul>
 
       {/* Footer / Read-Only Note */}
-      <div className="mt-6 pt-4 border-t border-slate-100 text-center">
-        <p className="text-[11px] text-slate-400 font-medium">
-          System generated alerts. These cannot be modified manually.
+      <div className="mt-4 pt-3 border-t border-slate-100 text-center">
+        <p className="text-[10px] text-slate-400 font-medium flex items-center justify-center gap-1.5">
+          <AlertCircle size={12} />
+          Auto-generated based on current sales velocity.
         </p>
       </div>
 
