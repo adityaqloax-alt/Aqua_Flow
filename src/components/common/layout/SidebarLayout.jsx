@@ -12,7 +12,10 @@ import { useNavigate } from "react-router-dom";
  * 1. ADMIN / COMPANY IMPORTS
  * ========================================================================= */
 import DashboardPage from "../../../pages/DashboardPage";
-import ProductionPage from "../../../pages/ProductionPage";
+// import ProductionPage_demo from "../../../pages/ProductionPage_demo";
+import ProductionPage_demo from "../../../pages/ProductionPage_demo";
+
+
 import InventoryPage from "../../../pages/InventoryPage";
 import OrdersPage from "../../../pages/OrdersPage";
 import DistributionPage from "../../../pages/DistributionPage";
@@ -639,7 +642,7 @@ const SidebarLayout = () => {
       case "production":
         return (
           <FullPageWrapper>
-            <ProductionPage />
+            <ProductionPage_demo />
           </FullPageWrapper>
         );
       case "inventory":
