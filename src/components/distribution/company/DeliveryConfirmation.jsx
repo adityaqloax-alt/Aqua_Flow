@@ -1,266 +1,315 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
-  CheckCircle, 
-  XCircle, 
-  AlertTriangle, 
-  Package, 
-  RefreshCcw, 
-  Camera, 
-  PenTool, 
-  ChevronDown, 
-  ChevronUp,
-  Save,
-  Truck
+  Camera, CheckCircle, Upload, Clock, MapPin, User, 
+  Droplets, AlertCircle, Phone, MessageSquare 
 } from 'lucide-react';
 
 const DeliveryConfirmation = () => {
-  // Enhanced Data Model
-  const [orders, setOrders] = useState([
-    { 
-      id: "ORD-8821", 
-      customer: "TechSpace IT Park", 
-      items: "20L Water Jar", 
-      orderedQty: 50, 
-      status: "Pending", // Pending, Delivered, Partial, Failed
-      deliveredQty: 50,
-      returnedEmpties: 0,
-      notes: "",
-      failureReason: ""
+  const [deliveries, setDeliveries] = useState([
+    {
+      id: "DEL-8821",
+      customer: "TechSpace IT Park",
+      address: "Building 4, Sector 5, Salt Lake",
+      jars: 50,
+      timeWindow: "09:00 AM - 11:00 AM",
+      status: "in_transit", // assigned | in_transit | delivered | delayed
+      contact: "+91 98765 43210"
     },
-    { 
-      id: "ORD-8822", 
-      customer: "Green Valley Apts", 
-      items: "20L Water Jar", 
-      orderedQty: 20, 
-      status: "Pending",
-      deliveredQty: 20,
-      returnedEmpties: 0,
-      notes: "",
-      failureReason: ""
-    },
-    { 
-      id: "ORD-8823", 
-      customer: "Sunrise Cafe", 
-      items: "750ml Premium Case", 
-      orderedQty: 5, 
-      status: "Delivered", // Already done
-      deliveredQty: 5,
-      returnedEmpties: 0,
-      timestamp: "10:30 AM"
+    {
+      id: "DEL-8822",
+      customer: "Green Valley Apartments",
+      address: "12 Main Road, New Town",
+      jars: 20,
+      timeWindow: "11:30 AM - 01:00 PM",
+      status: "assigned",
+      contact: "+91 98765 43211"
     }
   ]);
 
-  const [expandedId, setExpandedId] = useState(null);
-  const [editForm, setEditForm] = useState({});
+  const [selectedDelivery, setSelectedDelivery] = useState(null);
+  const [proofType, setProofType] = useState("photo"); // photo | signature | whatsapp
+  const [capturedProof, setCapturedProof] = useState(null);
+  const [empties, setEmpties] = useState(0);
+  const fileInputRef = useRef();
 
-  const toggleExpand = (order) => {
-    if (expandedId === order.id) {
-      setExpandedId(null);
-    } else {
-      setExpandedId(order.id);
-      // Initialize form with defaults
-      setEditForm({
-        ...order,
-        status: 'Delivered', // Default attempt
-        tempDeliveredQty: order.orderedQty,
-        tempReturnedEmpties: 0
-      });
+  const handleCaptureProof = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCapturedProof(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const handleUpdate = (id) => {
-    setOrders(orders.map(o => 
-      o.id === id ? {
-        ...o,
-        status: editForm.status,
-        deliveredQty: editForm.tempDeliveredQty,
-        returnedEmpties: editForm.tempReturnedEmpties,
-        failureReason: editForm.failureReason,
-        notes: editForm.notes,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      } : o
+  const handleConfirmDelivery = () => {
+    if (!capturedProof) {
+      alert("Please provide delivery proof!");
+      return;
+    }
+
+    setDeliveries(deliveries.map(d => 
+      d.id === selectedDelivery.id 
+        ? { ...d, status: "delivered", proof: capturedProof, empties } 
+        : d
     ));
-    setExpandedId(null);
+
+    alert(`✅ Delivery ${selectedDelivery.id} confirmed successfully!`);
+    setSelectedDelivery(null);
+    setCapturedProof(null);
+    setEmpties(0);
   };
 
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'Delivered': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-      case 'Partial': return 'bg-amber-100 text-amber-700 border-amber-200';
-      case 'Failed': return 'bg-rose-100 text-rose-700 border-rose-200';
-      default: return 'bg-slate-100 text-slate-600 border-slate-200';
+  const handleMarkDelayed = () => {
+    const reason = prompt("Enter delay reason:");
+    if (reason) {
+      setDeliveries(deliveries.map(d => 
+        d.id === selectedDelivery.id 
+          ? { ...d, status: "delayed", delayReason: reason } 
+          : d
+      ));
+      setSelectedDelivery(null);
     }
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full">
+    <div className="flex h-screen bg-slate-50">
       
-      {/* Header */}
-      <div className="p-5 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-        <div>
-          <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-            <Truck size={20} className="text-indigo-600"/> Delivery Execution
+      {/* Left: Delivery List */}
+      <div className="w-96 bg-white border-r border-slate-200 flex flex-col">
+        <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-indigo-600 to-purple-600">
+          <h2 className="text-lg font-bold text-white flex items-center gap-2">
+            <Droplets size={20} /> Today's Deliveries
           </h2>
-          <p className="text-xs text-slate-500">Update status, track assets, and sync inventory.</p>
+          <p className="text-xs text-indigo-100 mt-1">Tap to confirm completion</p>
         </div>
-        <div className="text-right">
-           <div className="text-2xl font-bold text-indigo-600">{orders.filter(o => o.status === 'Pending').length}</div>
-           <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pending Stops</div>
+
+        <div className="flex-1 overflow-y-auto p-3 space-y-3">
+          {deliveries.map(delivery => (
+            <div 
+              key={delivery.id}
+              onClick={() => setSelectedDelivery(delivery)}
+              className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                selectedDelivery?.id === delivery.id 
+                  ? 'bg-indigo-50 border-indigo-500 shadow-lg' 
+                  : delivery.status === 'delivered' 
+                    ? 'bg-emerald-50 border-emerald-300 opacity-60'
+                    : delivery.status === 'delayed'
+                      ? 'bg-amber-50 border-amber-300'
+                      : 'bg-white border-slate-200 hover:border-indigo-300'
+              }`}
+            >
+              <div className="flex justify-between items-start mb-2">
+                <span className="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-1 rounded">
+                  {delivery.id}
+                </span>
+                <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+                  delivery.status === 'delivered' ? 'bg-emerald-500 text-white' :
+                  delivery.status === 'delayed' ? 'bg-amber-500 text-white' :
+                  delivery.status === 'in_transit' ? 'bg-blue-500 text-white' :
+                  'bg-slate-300 text-slate-700'
+                }`}>
+                  {delivery.status === 'delivered' ? '✓ Delivered' :
+                   delivery.status === 'delayed' ? '⚠ Delayed' :
+                   delivery.status === 'in_transit' ? '→ In Transit' : 'Assigned'}
+                </span>
+              </div>
+
+              <h3 className="font-bold text-slate-800 mb-1">{delivery.customer}</h3>
+              <p className="text-xs text-slate-500 flex items-center gap-1 mb-2">
+                <MapPin size={12} /> {delivery.address}
+              </p>
+
+              <div className="flex justify-between items-center mt-3 pt-3 border-t border-slate-100">
+                <span className="text-sm font-bold text-indigo-600">
+                  {delivery.jars} Jars
+                </span>
+                <span className="text-xs text-slate-500 flex items-center gap-1">
+                  <Clock size={12} /> {delivery.timeWindow}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* List */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {orders.map((order) => {
-          const isExpanded = expandedId === order.id;
-          const isCompleted = order.status !== 'Pending';
-
-          return (
-            <div 
-              key={order.id} 
-              className={`border rounded-xl transition-all duration-300 overflow-hidden ${isExpanded ? 'border-indigo-400 shadow-md ring-1 ring-indigo-100' : 'border-slate-200 bg-white'}`}
-            >
-              
-              {/* Row Summary */}
-              <div 
-                onClick={() => !isCompleted && toggleExpand(order)}
-                className={`p-4 flex items-center justify-between cursor-pointer ${isCompleted ? 'bg-slate-50 opacity-80' : 'bg-white hover:bg-slate-50'}`}
-              >
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center border ${isCompleted ? 'bg-white' : 'bg-indigo-50 text-indigo-600 border-indigo-100'}`}>
-                    {isCompleted ? (
-                      order.status === 'Failed' ? <XCircle size={20} className="text-rose-500"/> : 
-                      order.status === 'Partial' ? <AlertTriangle size={20} className="text-amber-500"/> : 
-                      <CheckCircle size={20} className="text-emerald-500"/>
-                    ) : (
-                      <span className="font-bold text-sm">{order.orderedQty}</span>
-                    )}
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-800 text-sm">{order.customer}</h4>
-                    <p className="text-xs text-slate-500">{order.items}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                   <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border ${getStatusColor(order.status)}`}>
-                     {order.status}
-                   </span>
-                   {!isCompleted && (
-                     isExpanded ? <ChevronUp size={16} className="text-slate-400"/> : <ChevronDown size={16} className="text-slate-400"/>
-                   )}
-                </div>
+      {/* Right: Confirmation Panel */}
+      <div className="flex-1 flex items-center justify-center p-8">
+        {!selectedDelivery ? (
+          <div className="text-center text-slate-400">
+            <Droplets size={64} className="mx-auto mb-4 opacity-20" />
+            <p className="text-lg font-bold">Select a delivery to confirm</p>
+          </div>
+        ) : selectedDelivery.status === 'delivered' ? (
+          <div className="text-center">
+            <CheckCircle size={80} className="text-emerald-500 mx-auto mb-4" />
+            <h3 className="text-2xl font-bold text-slate-800 mb-2">Already Delivered</h3>
+            <p className="text-slate-500">Proof captured on {new Date().toLocaleDateString()}</p>
+          </div>
+        ) : (
+          <div className="max-w-2xl w-full bg-white rounded-2xl shadow-2xl p-8 border border-slate-200">
+            
+            {/* Header */}
+            <div className="flex justify-between items-start mb-6 pb-6 border-b border-slate-100">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-800 mb-1">
+                  Confirm Delivery
+                </h2>
+                <p className="text-sm text-slate-500 font-mono">{selectedDelivery.id}</p>
               </div>
+              <button 
+                onClick={handleMarkDelayed}
+                className="flex items-center gap-2 px-4 py-2 bg-amber-100 text-amber-700 rounded-lg font-bold text-sm hover:bg-amber-200"
+              >
+                <AlertCircle size={16} /> Report Delay
+              </button>
+            </div>
 
-              {/* Expanded Edit Form */}
-              {isExpanded && !isCompleted && (
-                <div className="p-4 bg-slate-50 border-t border-slate-100 animate-in slide-in-from-top-2">
-                  
-                  {/* Action Selector */}
-                  <div className="grid grid-cols-3 gap-2 mb-6">
-                    {['Delivered', 'Partial', 'Failed'].map((action) => (
-                      <button
-                        key={action}
-                        onClick={() => setEditForm({...editForm, status: action})}
-                        className={`py-2 rounded-lg text-xs font-bold transition-all border ${
-                          editForm.status === action
-                            ? action === 'Delivered' ? 'bg-emerald-600 text-white border-emerald-600'
-                            : action === 'Partial' ? 'bg-amber-500 text-white border-amber-500'
-                            : 'bg-rose-500 text-white border-rose-500'
-                            : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
-                        }`}
-                      >
-                        {action}
-                      </button>
-                    ))}
-                  </div>
+            {/* Customer Info */}
+            <div className="bg-slate-50 p-4 rounded-xl mb-6">
+              <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                <User size={18} /> Customer Details
+              </h3>
+              <p className="text-slate-700 font-bold mb-1">{selectedDelivery.customer}</p>
+              <p className="text-sm text-slate-500 mb-2">{selectedDelivery.address}</p>
+              <a 
+                href={`tel:${selectedDelivery.contact}`}
+                className="text-sm text-indigo-600 font-bold flex items-center gap-2 hover:underline"
+              >
+                <Phone size={14} /> {selectedDelivery.contact}
+              </a>
+            </div>
 
-                  {/* Quantity & Inventory Inputs */}
-                  {editForm.status !== 'Failed' && (
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Delivered Qty</label>
-                        <div className="relative">
-                          <Package className="absolute left-3 top-2.5 text-slate-400" size={14}/>
-                          <input 
-                            type="number" 
-                            value={editForm.tempDeliveredQty}
-                            onChange={(e) => setEditForm({...editForm, tempDeliveredQty: parseInt(e.target.value)})}
-                            className="w-full pl-9 p-2 rounded-lg border border-slate-300 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none"
-                          />
-                        </div>
-                      </div>
-                      
-                      {/* CRITICAL: Empty Jar Return Field */}
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Empties Returned</label>
-                        <div className="relative">
-                          <RefreshCcw className="absolute left-3 top-2.5 text-slate-400" size={14}/>
-                          <input 
-                            type="number" 
-                            value={editForm.tempReturnedEmpties}
-                            onChange={(e) => setEditForm({...editForm, tempReturnedEmpties: parseInt(e.target.value)})}
-                            className="w-full pl-9 p-2 rounded-lg border border-slate-300 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
+            {/* Delivery Quantity */}
+            <div className="mb-6">
+              <label className="text-sm font-bold text-slate-600 mb-2 block">
+                Delivered Quantity
+              </label>
+              <div className="flex items-center gap-3 bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+                <Droplets size={24} className="text-indigo-600" />
+                <span className="text-3xl font-bold text-indigo-600">
+                  {selectedDelivery.jars} Jars
+                </span>
+              </div>
+            </div>
 
-                  {/* Failure/Partial Reason */}
-                  {(editForm.status === 'Failed' || editForm.status === 'Partial') && (
-                    <div className="mb-4">
-                       <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Reason Code</label>
-                       <select 
-                         className="w-full p-2 rounded-lg border border-slate-300 text-sm bg-white"
-                         onChange={(e) => setEditForm({...editForm, failureReason: e.target.value})}
-                       >
-                         <option>Select Reason...</option>
-                         <option>Shop Closed</option>
-                         <option>Cash Issue</option>
-                         <option>Stock Damaged</option>
-                         <option>Customer Refused</option>
-                       </select>
-                    </div>
-                  )}
+            {/* Empty Jars Collected */}
+            <div className="mb-6">
+              <label className="text-sm font-bold text-slate-600 mb-2 block">
+                Empty Jars Collected
+              </label>
+              <input 
+                type="number"
+                value={empties}
+                onChange={(e) => setEmpties(parseInt(e.target.value) || 0)}
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                placeholder="Enter number of empties"
+              />
+            </div>
 
-                  {/* Proof of Delivery */}
-                  <div className="flex gap-2 mb-6">
-                    <button className="flex-1 py-2 bg-white border border-slate-300 text-slate-600 rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-slate-100">
-                      <Camera size={14}/> Add Photo
-                    </button>
-                    <button className="flex-1 py-2 bg-white border border-slate-300 text-slate-600 rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-slate-100">
-                      <PenTool size={14}/> Signature
-                    </button>
-                  </div>
+            {/* Proof Type Selection */}
+            <div className="mb-6">
+              <label className="text-sm font-bold text-slate-600 mb-3 block">
+                Delivery Proof Type
+              </label>
+              <div className="grid grid-cols-3 gap-3">
+                <button
+                  onClick={() => setProofType("photo")}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    proofType === 'photo' 
+                      ? 'bg-indigo-50 border-indigo-500 text-indigo-700' 
+                      : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                  }`}
+                >
+                  <Camera className="mx-auto mb-2" size={24} />
+                  <p className="text-xs font-bold">Photo</p>
+                </button>
+                <button
+                  onClick={() => setProofType("signature")}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    proofType === 'signature' 
+                      ? 'bg-indigo-50 border-indigo-500 text-indigo-700' 
+                      : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                  }`}
+                >
+                  <Upload className="mx-auto mb-2" size={24} />
+                  <p className="text-xs font-bold">Signature</p>
+                </button>
+                <button
+                  onClick={() => setProofType("whatsapp")}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    proofType === 'whatsapp' 
+                      ? 'bg-indigo-50 border-indigo-500 text-indigo-700' 
+                      : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                  }`}
+                >
+                  <MessageSquare className="mx-auto mb-2" size={24} />
+                  <p className="text-xs font-bold">WhatsApp</p>
+                </button>
+              </div>
+            </div>
 
-                  {/* Save Button */}
-                  <button 
-                    onClick={() => handleUpdate(order.id)}
-                    className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-200 hover:bg-indigo-700 flex items-center justify-center gap-2"
+            {/* Proof Capture */}
+            <div className="mb-6">
+              <input 
+                type="file"
+                ref={fileInputRef}
+                accept="image/*"
+                capture="environment"
+                onChange={handleCaptureProof}
+                className="hidden"
+              />
+              
+              {!capturedProof ? (
+                <button
+                  onClick={() => fileInputRef.current.click()}
+                  className="w-full p-8 border-2 border-dashed border-slate-300 rounded-xl hover:border-indigo-400 hover:bg-indigo-50 transition-all"
+                >
+                  <Camera size={48} className="mx-auto mb-3 text-slate-400" />
+                  <p className="font-bold text-slate-600">Capture Proof</p>
+                  <p className="text-xs text-slate-400 mt-1">Take photo or upload signature</p>
+                </button>
+              ) : (
+                <div className="relative">
+                  <img 
+                    src={capturedProof} 
+                    alt="Proof" 
+                    className="w-full h-64 object-cover rounded-xl border border-slate-200"
+                  />
+                  <button
+                    onClick={() => setCapturedProof(null)}
+                    className="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-lg text-xs font-bold"
                   >
-                    <Save size={16} /> Confirm Update
+                    Retake
                   </button>
-
                 </div>
               )}
-
-              {/* Completed Summary View */}
-              {isCompleted && (
-                 <div className="px-4 pb-3 pl-[4.5rem] text-xs text-slate-500 flex justify-between">
-                    <div>
-                      {order.status !== 'Failed' && (
-                        <span>Delivered: <b>{order.deliveredQty}</b> • Returns: <b>{order.returnedEmpties}</b></span>
-                      )}
-                      {order.status === 'Failed' && <span className="text-rose-600 font-bold">Reason: {order.failureReason || 'Not specified'}</span>}
-                    </div>
-                    <div>{order.timestamp}</div>
-                 </div>
-              )}
-
             </div>
-          );
-        })}
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setSelectedDelivery(null)}
+                className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelivery}
+                disabled={!capturedProof}
+                className={`flex-1 px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 ${
+                  capturedProof 
+                    ? 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-lg' 
+                    : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                }`}
+              >
+                <CheckCircle size={20} /> Confirm Delivery
+              </button>
+            </div>
+
+          </div>
+        )}
       </div>
     </div>
   );
